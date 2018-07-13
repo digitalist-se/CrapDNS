@@ -1,5 +1,19 @@
+
+
+<!-- toc -->
+
+- [CrapDNS](#crapdns)
+  * [Why on earth would you want that?](#why-on-earth-would-you-want-that)
+  * [How it works](#how-it-works)
+  * [Example](#example)
+  * [Known Issues](#known-issues)
+
+<!-- tocstop -->
+
 # CrapDNS
-A "DNS server" in Golang for MacOS only that gets it's name from the implementation the  **C**ommon **R**equest and **A**nswer **P**rotcol.
+
+A "DNS server" in Golang for MacOS only that gets it's name from the implementation the  
+**C**ommon **R**equest and **A**nswer **P**rotcol.
 
 Only joking, it gets it's name from being a bit crap. :)  
 
@@ -52,4 +66,4 @@ Theoretically this could be a security issue, but since we only bind to the loop
 * No guarantee is given that this programme will not eat your firstborn, or take a dump in your morning coffee. Use at your own risk.
 
 
-Comments, pull-requests, enhancements are very welcome. 
+Comments, pull-requests, enhancements are very welcome.
