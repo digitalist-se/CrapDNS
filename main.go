@@ -16,16 +16,28 @@ import (
 )
 
 var (
-	inConfig      = flag.String("configfile", "crapdns.conf", "Use configuration file ( default: crapdns.conf)")
-	inDomains     = flag.String("domains", "", "A comma-separated list of domains to answer for. (Disables config file).")
+	// inConfig is a flag to pass a configuration file with a list of domains.
+	inConfig = flag.String("configfile", "crapdns.conf", "Use configuration file ( default: crapdns.conf)")
+
+	// inDomains is a flag for passing domains on the commanf-line
+	inDomains = flag.String("domains", "", "A comma-separated list of domains to answer for. (Disables config file).")
+
+	// parsedDomains stores an array of domain strings.
 	parsedDomains []string
 )
 
 const (
+	// targetDir is the path to the MacOS resolver directory.
 	targetDir = "/etc/resolver/"
-	fileSig   = "###CRAPDNS###"
+
+	// fileSig is added toe resolver files we generate
+	// so that we only delete our own files.
+	fileSig = "###CRAPDNS###"
 )
 
+// panicExit is for passing an exit code up through panic()
+// instead of calling os.Exit() directly. This means we can
+// use a deferred fumction to cleanup everything.
 type panicExit struct{ Code int }
 
 func main() {
@@ -45,8 +57,10 @@ func main() {
 
 	parsedDomains = setupDomains()
 
+	// server listens only on loopback port 53 UDP
 	server := &dns.Server{Addr: "127.0.0.1:53", Net: "udp"}
 
+	// Run our server in a goroutine.
 	go func() {
 
 		if err := server.ListenAndServe(); err != nil {
@@ -76,6 +90,9 @@ func handleExit() {
 	}
 }
 
+// handleRequest(w dns.ResponseWriter, r *dns.Msg) handles incoming DNS
+// queries and returns an "A" record pointing to the loopback address.
+// If the domain is not listed in the configuration, it returns NXDOMAIN.
 func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 
 	var found = false
@@ -106,6 +123,8 @@ func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 	w.WriteMsg(m)
 }
 
+// setupDomains sets up the resolvers for each domain
+// passed either on the command-line or from a config file.
 func setupDomains() []string {
 
 	var myDomains []string
@@ -140,6 +159,8 @@ func setupDomains() []string {
 	return myDomains
 }
 
+// cleanupDomains iterates through the resover directry, looking for files
+// with our signature (fileSig) and removing them.
 func cleanupDomains() {
 	// Look for our files in the resolver directory
 	fmt.Println("Cleaning up")
