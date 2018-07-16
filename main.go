@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	. "github.com/logrusorgru/aurora"
-	"github.com/miekg/dns"
 	"io/ioutil"
 	"net"
 	"os"
@@ -12,6 +10,9 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+
+	"github.com/logrusorgru/aurora"
+	"github.com/miekg/dns"
 )
 
 var (
@@ -25,15 +26,15 @@ const (
 	fileSig   = "###CRAPDNS###"
 )
 
-type Exit struct{ Code int }
+type panicExit struct{ Code int }
 
 func main() {
 	defer handleExit()
 	defer cleanupDomains()
 
 	if runtime.GOOS != "darwin" {
-		fmt.Println(Red("This utility is for Mac OS only."))
-		panic(Exit{2})
+		fmt.Println(aurora.Red("This utility is for Mac OS only."))
+		panic(panicExit{2})
 	}
 
 	flag.Usage = func() {
@@ -49,26 +50,26 @@ func main() {
 	go func() {
 
 		if err := server.ListenAndServe(); err != nil {
-			fmt.Printf("Failed to setup the server: %s\n", Red(err.Error()))
-			fmt.Println(Red("This command should be run as sudo."))
+			fmt.Printf("Failed to setup the server: %s\n", aurora.Red(err.Error()))
+			fmt.Println(aurora.Red("This command should be run as sudo."))
 			os.Exit(1)
 		}
 
 	}()
 
-	fmt.Println("\nStarting CrapDNS. ", Green("Listening on 127.0.0.1:53"))
+	fmt.Println("\nStarting CrapDNS. ", aurora.Green("Listening on 127.0.0.1:53"))
 	dns.HandleFunc(".", handleRequest)
 
 	// Wait for the apocalypse
 	sig := make(chan os.Signal)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	s := <-sig
-	fmt.Println(Sprintf(Green("Signal (%s) received, exiting"), Red(s)))
+	fmt.Println(aurora.Sprintf(aurora.Green("Signal (%s) received, exiting"), aurora.Red(s)))
 }
 
 func handleExit() {
 	if e := recover(); e != nil {
-		if exit, ok := e.(Exit); ok == true {
+		if exit, ok := e.(panicExit); ok == true {
 			os.Exit(exit.Code)
 		}
 		panic(e) // not an Exit, bubble up
@@ -122,15 +123,15 @@ func setupDomains() []string {
 		// Or try to read from the config file.
 		content, err := ioutil.ReadFile(*inConfig)
 		if err != nil {
-			fmt.Println(Sprintf(Red("Unable to read config file (%s)\n and no domains supplied on command-line "), *inConfig))
-			panic(Exit{1})
+			fmt.Println(aurora.Sprintf(aurora.Red("Unable to read config file (%s)\n and no domains supplied on command-line "), *inConfig))
+			panic(panicExit{1})
 		}
 		myDomains = strings.Split(string(content), "\n")
 	}
 
 	// Setup each domain in the resolver directory.
 	for i := range myDomains {
-		fmt.Println("Creating resolver for ", Green(myDomains[i]))
+		fmt.Println("Creating resolver for ", aurora.Green(myDomains[i]))
 		err := ioutil.WriteFile(targetDir+myDomains[i], nsTemplate, 0644)
 		if err != nil {
 			panic(err)
@@ -155,13 +156,13 @@ func cleanupDomains() {
 			}
 			// Check if it's one of ours
 			if strings.HasPrefix(string(content), fileSig) {
-				fmt.Println(Green("Removing file: "), Green(targetDir+f.Name()))
+				fmt.Println(aurora.Green("Removing file: "), aurora.Green(targetDir+f.Name()))
 				err := os.Remove(targetDir + f.Name())
 				if err != nil {
 					panic(err)
 				}
 			} else {
-				fmt.Println(Magenta("Skipping file "), Green(f.Name()))
+				fmt.Println(aurora.Magenta("Skipping file "), aurora.Green(f.Name()))
 			}
 		}
 	}
