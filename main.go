@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"os/user"
 	"runtime"
 	"strings"
 	"syscall"
@@ -29,22 +30,32 @@ const (
 	// targetDir is the path to the MacOS resolver directory.
 	targetDir = "/etc/resolver/"
 
-	// fileSig is added toe resolver files we generate
+	// fileSig is added to resolver files we generate
 	// so that we only delete our own files.
 	fileSig = "###CRAPDNS###"
 )
 
 // panicExit is for passing an exit code up through panic()
 // instead of calling os.Exit() directly. This means we can
-// use a deferred fumction to cleanup everything.
+// use a deferred function to cleanup everything.
 type panicExit struct{ Code int }
 
 func main() {
 	defer handleExit()
-	defer cleanupDomains()
 
 	if runtime.GOOS != "darwin" {
 		fmt.Println("This utility is for Mac OS only.")
+		panic(panicExit{2})
+	}
+
+	u, err :=  user.Current()
+	if err != nil {
+		fmt.Println("Unable to determine current user. Exiting.")
+		panic(panicExit{2})
+	}
+
+	if u.Uid != "0" {
+		fmt.Println("This utility must be run as root. Exiting.")
 		panic(panicExit{2})
 	}
 
@@ -53,7 +64,7 @@ func main() {
 	}
 
 	flag.Parse()
-
+	defer cleanupDomains()
 	parsedDomains = setupDomains()
 
 	// server listens only on loopback port 53 UDP
@@ -64,7 +75,6 @@ func main() {
 
 		if err := server.ListenAndServe(); err != nil {
 			fmt.Printf("Failed to setup the server: %s\n", err.Error())
-			fmt.Println("This command should be run as sudo.")
 			os.Exit(1)
 		}
 

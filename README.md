@@ -56,7 +56,7 @@ lando poweroff && LANDO_PROXY_DOMAIN=test lando start
 ```
 $$$PROFIT$$$
 
-CrapDNS may also be run without parameters or with the parameter `--config=<configfile>` (default crapdns.conf)
+CrapDNS may also be run without parameters or with the parameter `--configfile=<configfile>` (default crapdns.conf)
 which will read a list of domain names, one-per-line from a config file.  
 
 ## Known Issues
