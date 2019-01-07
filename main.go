@@ -168,7 +168,7 @@ func setupDomains() []string {
 	return myDomains
 }
 
-// cleanupDomains iterates through the resover directry, looking for files
+// cleanupDomains iterates through the resolver directory, looking for files
 // with our signature (fileSig) and removing them.
 func cleanupDomains() {
 	// Look for our files in the resolver directory
